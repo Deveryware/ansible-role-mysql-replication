@@ -1,0 +1,119 @@
+---
+- name: Include OS-specific variables.
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml"
+    - "{{ ansible_os_family }}.yml"
+
+- name: Ensure replication user exists on master.
+  mysql_user:
+    name: "{{ mysql_replication_user.name }}"
+    host: "{{ mysql_replication_user.host | default('%') }}"
+    password: "{{ mysql_replication_user.password }}"
+    priv: "{{ mysql_replication_user.priv | default('*.*:REPLICATION SLAVE,REPLICATION CLIENT') }}"
+    state: present
+    login_unix_socket: "{{ mysql_socket }}"
+  when:
+    - mysql_replication_role == 'master'
+    - mysql_replication_user.name is defined
+    - (mysql_replication_master | length) > 0
+
+- name: Check slave replication status.
+  mysql_replication:
+    mode: getslave
+    login_unix_socket: "{{ mysql_socket }}"
+  ignore_errors: true
+  register: slave
+  when:
+    - mysql_replication_role == 'slave'
+    - (mysql_replication_master | length) > 0
+
+- name: Check master replication status.
+  mysql_replication:
+    mode: getmaster
+    login_unix_socket: "{{ mysql_socket }}"
+  delegate_to: "{{ mysql_replication_master }}"
+  register: master
+  when:
+    - (slave.Is_Slave is defined and not slave.Is_Slave) or (slave.Is_Slave is not defined and slave is failed)
+    - mysql_replication_role == 'slave'
+    - (mysql_replication_master | length) > 0
+
+- name: Configure replication on the slave.
+  mysql_replication:
+    mode: changemaster
+    master_host: "{{ mysql_replication_master }}"
+    master_user: "{{ mysql_replication_user.name }}"
+    master_password: "{{ mysql_replication_user.password }}"
+    master_log_file: "{{ master.File }}"
+    master_log_pos: "{{ master.Position }}"
+    login_unix_socket: "{{ mysql_socket }}"
+  ignore_errors: true
+  when:
+    - (slave.Is_Slave is defined and not slave.Is_Slave) or (slave.Is_Slave is not defined and slave is failed)
+    - mysql_replication_role == 'slave'
+    - mysql_replication_user.name is defined
+    - (mysql_replication_master | length) > 0
+
+- name: Start replication.
+  mysql_replication:
+    mode: startslave
+    login_unix_socket: "{{ mysql_socket }}"
+  when:
+    - (slave.Is_Slave is defined and not slave.Is_Slave) or (slave.Is_Slave is not defined and slave is failed)
+    - mysql_replication_role == 'slave'
+    - (mysql_replication_master | length) > 0
+
+- name: Check slave replication status.
+  mysql_replication:
+    mode: getslave
+    login_unix_socket: "{{ mysql_socket }}"
+  ignore_errors: true
+  register: slave
+  when:
+    - mysql_replication_role == 'slave'
+    - (mysql_replication_master | length) > 0
+
+- debug:
+    msg: "{{slave}}"
+
+- name: Stop Slave replication.
+  mysql_replication:
+    mode: stopslave
+    login_unix_socket: "{{ mysql_socket }}"
+  register: shutdown
+  when:
+    - mysql_replication_gtid
+    - mysql_replication_role == 'slave'
+    - slave.Is_Slave == true
+    - slave.Slave_IO_Running == 'Yes'
+    - slave.Slave_SQL_Running == 'Yes'
+    - slave.Using_Gtid == 'No'
+    - mysql_replication_user.name is defined
+    - (mysql_replication_master | length) > 0
+
+- name: Configure replication on the slave.
+  mysql_replication:
+    mode: changemaster
+    master_use_gtid: "{{ mysql_master_user_gtid }}"
+    login_unix_socket: "{{ mysql_socket }}"
+  ignore_errors: true
+  when:
+  when:
+    - mysql_replication_gtid
+    - mysql_replication_role == 'slave'
+    - shutdown.changed == true
+    - mysql_replication_user.name is defined
+    - (mysql_replication_master | length) > 0
+
+- name: Start replication.
+  mysql_replication:
+    mode: startslave
+    login_unix_socket: "{{ mysql_socket }}"
+  when:
+    - mysql_replication_gtid
+    - mysql_replication_role == 'slave'
+    - shutdown.changed == true
+    - mysql_replication_role == 'slave'
+    - mysql_replication_user.name is defined
+    - (mysql_replication_master | length) > 0

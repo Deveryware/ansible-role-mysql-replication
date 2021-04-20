@@ -1,0 +1,17 @@
+galaxy_info:
+  author: Olivier Pouilly
+  description: "MySQL role derived from Jeff Geerling for the master-slave replication"
+  company: Deveryware
+  license: "license (ISC)"
+  min_ansible_version: 2.10
+  platforms:
+  - name: Debian
+    versions:
+    - buster
+  dependencies: []
+  galaxy_tags:
+    - database
+    - mysql
+    - mariadb
+    - db
+    - sql

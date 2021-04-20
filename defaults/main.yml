@@ -1,0 +1,4 @@
+---
+# defaults file for ansible-role-mysql-replication-master-slave
+mysql_replication_gtid: true
+mysql_socket: "{{ __mysql_socket }}"
