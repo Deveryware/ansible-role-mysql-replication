@@ -75,7 +75,7 @@
     - (mysql_replication_master | length) > 0
 
 - debug:
-    msg: "{{slave}}"
+    msg: "{{ slave }}"
 
 - name: Stop Slave replication.
   mysql_replication:
@@ -85,7 +85,7 @@
   when:
     - mysql_replication_gtid
     - mysql_replication_role == 'slave'
-    - slave.Is_Slave == true
+    - slave.Is_Slave
     - slave.Slave_IO_Running == 'Yes'
     - slave.Slave_SQL_Running == 'Yes'
     - slave.Using_Gtid == 'No'
@@ -101,7 +101,7 @@
   when:
     - mysql_replication_gtid
     - mysql_replication_role == 'slave'
-    - shutdown.changed == true
+    - shutdown.changed
     - mysql_replication_user.name is defined
     - (mysql_replication_master | length) > 0
 
@@ -112,7 +112,7 @@
   when:
     - mysql_replication_gtid
     - mysql_replication_role == 'slave'
-    - shutdown.changed == true
+    - shutdown.changed
     - mysql_replication_role == 'slave'
     - mysql_replication_user.name is defined
     - (mysql_replication_master | length) > 0
