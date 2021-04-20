@@ -99,7 +99,6 @@
     login_unix_socket: "{{ mysql_socket }}"
   ignore_errors: true
   when:
-  when:
     - mysql_replication_gtid
     - mysql_replication_role == 'slave'
     - shutdown.changed == true
