@@ -74,9 +74,6 @@
     - mysql_replication_role == 'slave'
     - (mysql_replication_master | length) > 0
 
-- debug:
-    msg: "{{ slave }}"
-
 - name: Stop Slave replication.
   mysql_replication:
     mode: stopslave
