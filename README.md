@@ -1,31 +1,27 @@
 # Ansible Role: MySQL Replication Master Slave
 
-This role is an extension of the tleguern mysql role.
-It's based on the geerlingguy's role to manage replication master slave and manage gtid features.
+This role is implemented as an extension to [tleguern's ansible-role-mysql][tleguern-mysql], itself a redesign of [geerlingguy's][geerlingguy-mysql] only containing the bare minimum.
+
+The content evolved from Jeff Geerling original replication tasks and now include GTID support.
 
 ## Requirements
 
-* Install mysql on your servers.You can use the tleguern roles : https://github.com/tleguern/ansible-role-mysql/
-* Setup the following minimal parameters:
-  * On the master
+An ansible role dedicated to the installation of MySQL/MariaDB such as [tleguern.mysql][tleguern-mysql].
+
+The following set of parameters must be configured on the master:
+
 ```ini
-
 [mysqld]
-
 log_bin =
-
 server_id =
-
 expire_logs_days =
-
 ```
-  * On the slave:
+
+And also on the slave:
+
 ```ini
-
 [mysqld]
-
 server_id =
-
 ```
 
 ## Role Variables
@@ -33,13 +29,15 @@ server_id =
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `mysql_replication_gtid` | Whether or not mysql is using gtid for the replication | `true` |
-| `mysql_replication_role` | Defines whether your host is a `master` or `slave` | mandatory |
-| `mysql_replication_user` | Defines replication user  | mandatory |
+| `mysql_replication_role` | Defines whether a host is a `master` or a `slave` | mandatory |
+| `mysql_replication_user` | Defines the replication user | mandatory |
 | `mysql_socket` | MySQL Unix domain socket used for connections | `{{ __mysql_socket }}` |
-| `mysql_replication_master` | Address or fqdn of the master | mandatory (for all slave servers)|
-| `mysql_master_user_gtid` | Configures the replica to use the MariaDB Global Transaction ID | `slave_pos` |
+| `mysql_replication_master` | IP address or FQDN of the master | mandatory (for all slave servers)|
+| `mysql_master_user_gtid` | The value passed to [`master_use_gtid`][master-use-gtid] | `slave_pos` |
 
-### mysql_replication_user variables:
+### `mysql_replication_user`
+
+This variable represents the replication user and its associated rights as a YAML dictionary using the following structure:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
@@ -48,116 +46,13 @@ server_id =
 | `password` | User's password  | mandatory |
 | `priv` | MySQL privileges string in the format  | `*.*:REPLICATION SLAVE,REPLICATION CLIENT` |
 
-## Example:
-
-master:
+Example:
 
 ```yaml
-
-mysql_socket: /run/mysqld/mysqld.sock
-
-mysql_replication_role: master
-
 mysql_replication_user:
-
   name: replication
-
-  host: "192.168.25.01"
-
+  host: 192.168.25.1
   password: "{{ vault_replication_password }}"
-
-mysql_config:
-
-  - name: client-server
-
-    content: |
-
-      socket=/var/www/var/run/mysql/mysql.sock
-
-      port=3306
-
-  - name: mysqld
-
-    content: |
-
-      bind-address = 0.0.0.0
-
-      datadir = /var/lib/mysql
-
-      log-basename = mysqld
-
-      tmpdir=/tmp
-
-      general-log
-
-      slow_query_log
-
-      log_error = /var/log/mysql/error.log
-
-      ## Replication conf
-
-      log_bin = binlog-m1
-
-      server_id = 1
-
-      expire_logs_days = 3
-
-      gtid-domain-id = 1
-
-  - name: mysqld_safe
-
-    content: |
-
-      syslog
-
-```
-
-slave:
-
-```yaml
-
-mysql_replication_master: '192.168.31.03'
-
-mysql_socket: /run/mysqld/mysqld.sock
-
-mysql_replication_role: slave
-
-mysql_config:
-
-  - name: client-server
-
-    content: |
-
-      socket=/var/www/var/run/mysql/mysql.sock
-
-      port=3306
-
-  - name: mysqld
-
-    content: |
-
-      bind-address = 0.0.0.0
-
-      datadir = /var/lib/mysql
-
-      log-basename = mysqld
-
-      tmpdir=/tmp
-
-      general-log
-
-      slow_query_log
-
-      log_error = /var/log/mysql/error.log
-
-      server_id = 2
-
-  - name: mysqld_safe
-
-    content: |
-
-      syslog
-
 ```
 
 ## Dependencies
@@ -167,8 +62,9 @@ None.
 ## Example Playbook
 
 ```yaml
-- hosts: dbs
+- hosts: databases
   vars:
+    - mysql_socket: /run/mysqld/mysqld.sock
     - mysql_db_admin_password: "{{ vaulted_mysql_db_admin_password }}"
     - mysql_users:
         - name: app_user
@@ -176,8 +72,37 @@ None.
     - mysql_databases:
         - name: app_db
   roles:
-    - ansible-role-mysql
-    - ansible-role-mysql-replication-master-slave
+    - role: ansible-role-mysql
+
+- hosts: database_primary
+  vars:
+    - mysql_replication_role: master
+    - mysql_replication_user:
+        name: replication
+        host: 192.168.25.1
+        password: "{{ vault_replication_password }}"
+    - mysql_config:
+        - name: mysqld
+          content: |
+            server_id = 1
+            expire_logs_days = 3
+            gtid-domain-id = 1
+            log_bin = binlog-m1
+  roles:
+    - role: ansible-role-mysql
+    - role: ansible-role-mysql-replication-master-slave
+
+- hosts: database_secondary
+  vars:
+    - mysql_replication_role: slave
+    - mysql_replication_master: 192.168.31.3
+    - mysql_config:
+        - name: mysqld
+          content: |
+            server_id = 2
+  roles:
+    - role: ansible-role-mysql
+    - role: ansible-role-mysql-replication-master-slave
 ```
 
 ## License
@@ -192,3 +117,7 @@ To get in touch with the author you can create a issue on github when requesting
 
 This role contains code from [Jeff Geerling](https://www.jeffgeerling.com/), author of [Ansible for DevOps](https://www.ansiblefordevops.com/).
 Additional work by Olivier Pouilly.
+
+[tleguern-mysql]: https://git.sr.ht/~tleguern/ansible-role-mysql
+[geerlingguy-mysql]: https://github.com/geerlingguy/ansible-role-mysql
+[master-use-gtid]: https://docs.ansible.com/ansible/latest/collections/community/mysql/mysql_replication_module.html#parameter-master_use_gtid
