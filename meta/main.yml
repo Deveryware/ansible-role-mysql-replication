@@ -1,6 +1,7 @@
 ---
 galaxy_info:
   author: Olivier Pouilly
+  role_name: mysql-replication-master-slave
   description: "MySQL role derived from Jeff Geerling for the master-slave replication"
   company: Deveryware
   license: "license (ISC)"
