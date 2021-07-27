@@ -29,7 +29,6 @@ expire_logs_days =
 | `mysql_replication_role_primary` | Define if the server is the primary | `false` |
 | `mysql_replication_role_replica` | Define if the server is a replica | `false` |
 
-
 ### `mysql_replication_user`
 
 This variable represents the replication user and its associated rights as a YAML dictionary using the following structure:
@@ -54,7 +53,7 @@ mysql_replication_user:
 
 None.
 
-## Example variable & playbook multi primary
+## Example of a multi primary configuration
 
 Variable DB1:
 
@@ -121,7 +120,7 @@ Playbook:
 - hosts: DBS
   roles:
     - role: ansible-role-mysql
-    - role: ansible-role-mysql-replication-primary-primary
+    - role: ansible-role-mysql-replication
 
 `̀̀``
 
