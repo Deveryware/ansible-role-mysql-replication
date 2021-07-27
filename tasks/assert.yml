@@ -1,0 +1,92 @@
+---
+- name: test if rsyslog_receiver is set correctly
+  ansible.builtin.assert:
+    that:
+      - mysql_replication_gtid is defined
+      - mysql_replication_gtid is boolean
+    quiet: yes
+  when:
+    - mysql_replication_gtid is defined
+
+- name: test if mysql_socket is set correctly
+  ansible.builtin.assert:
+    that:
+      - mysql_socket is defined
+      - mysql_socket is string
+    quiet: yes
+  when:
+    - mysql_socket is defined
+
+- name: test if mysql_replication_role_primary is set correctly
+  ansible.builtin.assert:
+    that:
+      - mysql_replication_role_primary is defined
+      - mysql_replication_role_primary is boolean
+    quiet: yes
+  when:
+    - mysql_replication_role_primary is defined
+
+- name: test if mysql_replication_role_replica is set correctly
+  ansible.builtin.assert:
+    that:
+      - mysql_replication_role_replica is defined
+      - mysql_replication_role_replica is boolean
+    quiet: yes
+  when:
+    - mysql_replication_role_replica is defined
+
+- name: test if mysql_replication_user.name is set correctly
+  ansible.builtin.assert:
+    that:
+      - mysql_replication_user.name is defined
+      - mysql_replication_user.name is string
+    quiet: yes
+  when:
+    - mysql_replication_user.name is defined
+
+- name: test if mysql_replication_user.host is set correctly
+  ansible.builtin.assert:
+    that:
+      - mysql_replication_user.host is defined
+      - mysql_replication_user.host is string
+    quiet: yes
+  when:
+    - mysql_replication_user.name is defined
+
+- name: test if mysql_replication_user.password is set correctly
+  ansible.builtin.assert:
+    that:
+      - mysql_replication_user.password is defined
+      - mysql_replication_user.password is string
+    quiet: yes
+  when:
+    - mysql_replication_user.password is defined
+
+- name: test if mysql_replication_user.priv is set correctly
+  ansible.builtin.assert:
+    that:
+      - mysql_replication_user.priv is defined
+      - mysql_replication_user.priv is string
+    quiet: yes
+  when:
+    - mysql_replication_user.priv is defined
+
+- name: test if mysql_replication_user.priv is set correctly
+  ansible.builtin.assert:
+    that:
+      - mysql_replication_user.priv is defined
+      - mysql_replication_user.priv is string
+    quiet: yes
+  when:
+    - mysql_replication_user.priv is defined
+
+- name: test if mysql_replication_primary is set correctly
+  ansible.builtin.assert:
+    that:
+      - mysql_replication_primary is defined
+      - mysql_replication_primary is string
+    quiet: yes
+  when:
+    - mysql_replication_primary is defined
+
+
