@@ -18,7 +18,7 @@
     priv: "{{ mysql_replication_user.priv | default('*.*:REPLICATION SLAVE,REPLICATION CLIENT') }}"
     state: present
     login_unix_socket: "{{ mysql_socket }}"
-  #no_log: true
+  no_log: true
   when: mysql_replication_role_primary
 
 - name: Check if the replica user is defined in the remote host.
@@ -73,7 +73,7 @@
     primary_log_pos: "{{ primary.Position }}"
     login_unix_socket: "{{ mysql_socket }}"
   ignore_errors: true
-  #no_log: true
+  no_log: true
   when:
     - mysql_replication_role_replica
     - (replica.Is_Replica is defined and not replica.Is_Replica) or (replica.Is_Replica is not defined and replica is failed) or (replica.Slave_IO_Running != 'Yes') or (replica.Slave_SQL_Running != 'Yes')

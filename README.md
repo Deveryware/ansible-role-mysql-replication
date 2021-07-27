@@ -24,9 +24,9 @@ expire_logs_days =
 | `mysql_replication_gtid` | Whether or not mysql is using gtid for the replication | `true` |
 | `mysql_replication_user` | Defines the replication user | mandatory |
 | `mysql_socket` | MySQL Unix domain socket used for connections | `{{ __mysql_socket }}` |
-| `mysql_replication_primary` | IP address or FQDN of the master | mandatory (for all replica servers)|
+| `mysql_replication_primary` | IP address or FQDN of the primary | mandatory (for all replica servers)|
 | `mysql_primary_use_gtid` | The value passed to [`primary_use_gtid`] | `slave_pos` |
-| `mysql_replication_role_primary` | Define if the mysql server is primary | `false` |
+| `mysql_replication_role_primary` | Define if the server is the primary | `false` |
 | `mysql_replication_role_replica` | Define if the server is a replica | `false` |
 
 
@@ -54,20 +54,20 @@ mysql_replication_user:
 
 None.
 
-## Example Variable & Playbook
-
-### Replication Primary-Primary
+## Example variable & playbook multi primary
 
 Variable DB1:
 
 ```yaml
 mysql_config:
+...
   - name: mysqld
     content: |
       server_id = 1
       expire_logs_days = 3
       gtid-domain-id = 1
       log_bin = binlog-m1
+...
 mysql_replication_user:
   name: replication
   host: 192.68.25.%
@@ -81,12 +81,14 @@ Variable DB2:
 
 ```yaml
 mysql_config:
+...
   - name: mysqld
     content: |
-      server_id = 1
+      server_id = 2
       expire_logs_days = 3
       gtid-domain-id = 1
       log_bin = binlog-m1
+...
 mysql_replication_user:
   name: replication
   host: 192.68.25.%
@@ -96,48 +98,20 @@ mysql_replication_role_primary: true
 mysql_replication_role_replica: true
 ```
 
-Playbook:
-
-```yaml
-- hosts: DBS
-  roles:
-    - role: ansible-role-mysql
-    - role: ansible-role-mysql-replication-primary-primary
-
-`̀̀``
-
-### Replication Primary-replica
-
-Variable DB1:
+Variable DB3:
 
 ```yaml
 mysql_config:
+...
   - name: mysqld
     content: |
-      server_id = 1
-      expire_logs_days = 3
-      gtid-domain-id = 1
-      log_bin = binlog-m1
+      server_id = 3
+...
 mysql_replication_user:
   name: replication
   host: 192.68.25.%
   password: "P@ssW0rD!"
-mysql_replication_primary: db2.exemple.com
-mysql_replication_role_primary: true
-
-```
-
-Variable DB2:
-
-```yaml
-mysql_replication_user:
-  name: replication
-  host: 192.68.25.%
-  password: "P@ssW0rD!"
-mysql_config:
-  - name: mysqld
-    content: |
-      server_id = 2
+mysql_replication_primary: db1.exemple.com
 mysql_replication_role_replica: true
 ```
 
@@ -148,9 +122,8 @@ Playbook:
   roles:
     - role: ansible-role-mysql
     - role: ansible-role-mysql-replication-primary-primary
+
 `̀̀``
-
-
 
 ## License
 
