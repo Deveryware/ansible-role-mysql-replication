@@ -27,7 +27,7 @@ expire_logs_days =
 | `mysql_replication_primary` | IP address or FQDN of the master | mandatory (for all replica servers)|
 | `mysql_primary_use_gtid` | The value passed to [`primary_use_gtid`] | `slave_pos` |
 | `mysql_replication_role_primary` | Define if the mysql server is primary | `false` |
-| `mysql_replication_role_replica` | Define if the mysql server is primary | `false` |
+| `mysql_replication_role_replica` | Define if the server is a replica | `false` |
 
 
 ### `mysql_replication_user`
