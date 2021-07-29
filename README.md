@@ -134,8 +134,7 @@ To get in touch with the author you can create a issue on github when requesting
 
 ## Author Information
 
-This role contains code from [Jeff Geerling](https://www.jeffgeerling.com/), author of [Ansible for DevOps](https://www.ansiblefordevops.com/).
-Additional work by Olivier Pouilly.
+This role was created in 2021 by Olivier Pouilly on the behalf of Deveryware.
 
 [tleguern-mysql]: https://git.sr.ht/~tleguern/ansible-role-mysql
 [geerlingguy-mysql]: https://github.com/geerlingguy/ansible-role-mysql
