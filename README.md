@@ -122,7 +122,7 @@ Playbook:
     - role: ansible-role-mysql
     - role: ansible-role-mysql-replication
 
-`̀̀``
+```
 
 ## License
 
