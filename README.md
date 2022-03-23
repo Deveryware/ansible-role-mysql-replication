@@ -24,7 +24,7 @@ expire_logs_days =
 | `mysql_replication_gtid` | Whether or not mysql is using gtid for the replication | `true` |
 | `mysql_replication_user` | Defines the replication user | mandatory |
 | `mysql_socket` | MySQL Unix domain socket used for connections | `{{ __mysql_socket }}` |
-| `mysql_replication_primary` | IP address or FQDN of the primary | mandatory (for all replica servers)|
+| `mysql_replication_primary` | IP address or FQDN of the primary | mandatory |
 | `mysql_primary_use_gtid` | The value passed to [`primary_use_gtid`] | `slave_pos` |
 | `mysql_replication_role_primary` | Define if the server is the primary | `false` |
 | `mysql_replication_role_replica` | Define if the server is a replica | `false` |
