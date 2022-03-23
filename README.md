@@ -138,4 +138,3 @@ This role was created in 2021 by Olivier Pouilly on the behalf of Deveryware.
 
 [tleguern-mysql]: https://git.sr.ht/~tleguern/ansible-role-mysql
 [geerlingguy-mysql]: https://github.com/geerlingguy/ansible-role-mysql
-[master-use-gtid]: https://docs.ansible.com/ansible/latest/collections/community/mysql/mysql_replication_module.html#parameter-master_use_gtid
