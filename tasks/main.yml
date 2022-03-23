@@ -106,7 +106,7 @@
     - replica.Is_Replica
     - replica.Slave_IO_Running == 'Yes'
     - replica.Slave_SQL_Running == 'Yes'
-    - replica.Using_Gtid == 'No'
+    - replica.Using_Gtid is defined and replica.Using_Gtid == 'No'
 
 - name: Configure replication on the replica.
   mysql_replication:
