@@ -24,7 +24,7 @@ expire_logs_days =
 | `mysql_replication_gtid` | Whether or not mysql is using gtid for the replication | `true` |
 | `mysql_replication_user` | Defines the replication user | mandatory |
 | `mysql_socket` | MySQL Unix domain socket used for connections | `{{ __mysql_socket }}` |
-| `mysql_replication_primary` | IP address or FQDN of the primary | mandatory (for all replica servers)|
+| `mysql_replication_primary` | IP address or FQDN of the primary | mandatory |
 | `mysql_primary_use_gtid` | The value passed to [`primary_use_gtid`] | `slave_pos` |
 | `mysql_replication_role_primary` | Define if the server is the primary | `false` |
 | `mysql_replication_role_replica` | Define if the server is a replica | `false` |
@@ -122,7 +122,7 @@ Playbook:
     - role: ansible-role-mysql
     - role: ansible-role-mysql-replication
 
-`̀̀``
+```
 
 ## License
 
@@ -138,4 +138,3 @@ This role was created in 2021 by Olivier Pouilly on the behalf of Deveryware.
 
 [tleguern-mysql]: https://git.sr.ht/~tleguern/ansible-role-mysql
 [geerlingguy-mysql]: https://github.com/geerlingguy/ansible-role-mysql
-[master-use-gtid]: https://docs.ansible.com/ansible/latest/collections/community/mysql/mysql_replication_module.html#parameter-master_use_gtid
