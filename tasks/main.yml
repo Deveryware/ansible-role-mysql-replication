@@ -1,14 +1,26 @@
 ---
-- name: Include OS-specific variables.
-  include_vars: "{{ item }}"
-  with_first_found:
-    - "{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml"
-    - "{{ ansible_os_family }}.yml"
-
 - name: import assert.yml
   import_tasks: assert.yml
   run_once: yes
   delegate_to: localhost
+
+- name: Get server infos
+  community.mysql.mysql_info:
+    login_user: root
+    login_unix_socket: "{{ mysql_socket }}"
+  register: infos
+
+- set_fact:
+    ismariadb: "{{ infos.version.full is search('MariaDB') }}"
+
+- name: Test connection to primary.
+  community.mysql.mysql_replication:
+    mode: getprimary
+    login_user: "{{ mysql_replication_user.name }}"
+    login_password: "{{ mysql_replication_user.password }}"
+    login_host: "{{ mysql_replication_primary }}"
+  register: primary_login_before
+  ignore_errors: true
 
 - name: Ensure replication user exists on primary.
   mysql_user:
@@ -17,113 +29,57 @@
     password: "{{ mysql_replication_user.password }}"
     priv: "{{ mysql_replication_user.priv | default('*.*:REPLICATION SLAVE,REPLICATION CLIENT') }}"
     state: present
+    force_context: true
     login_unix_socket: "{{ mysql_socket }}"
-  no_log: true
-  when: mysql_replication_role_primary
+  delegate_to: "{{ mysql_replication_primary }}"
 
-- name: Check if the replica user is defined in the remote host.
-  mysql_replication:
-    mode: getprimary
-    login_user: "{{ mysql_replication_user.name }}"
-    login_password: "{{ mysql_replication_user.password }}"
-    login_host: "{{ mysql_replication_primary }}"
-  register: primary
-  until: primary.Is_Primary is defined
-  retries: 5
-  delay: 10
-  when:
-    - mysql_replication_role_primary
-    - mysql_replication_role_replica
-
-- name: Check replica replication status.
+- name: Get replica replication status.
   mysql_replication:
     mode: getreplica
     login_unix_socket: "{{ mysql_socket }}"
-  ignore_errors: true
   register: replica
-  when: mysql_replication_role_replica
 
-- name: Stop replica if replication status is in error.
+- set_fact:
+    isreplica: "{{ replica.Is_Replica }}"
+
+- name: Stop replica if replication user or Master_Host changed.
   mysql_replication:
     mode: stopreplica
     login_unix_socket: "{{ mysql_socket }}"
-  register: restart_replica
-  ignore_errors: true
+  register: stopreplica
   when:
-    - mysql_replication_role_replica
-    - (replica.Slave_IO_Running is defined and replica.Slave_IO_Running != 'Yes') or (replica.Slave_IO_Running is defined and replica.Slave_SQL_Running != 'Yes')
+    - isreplica
+    - primary_login_before.failed or replica.Master_Host != mysql_replication_primary
 
-- name: Check primary replication status.
-  mysql_replication:
-    mode: getprimary
-    login_unix_socket: "{{ mysql_socket }}"
-  delegate_to: "{{ mysql_replication_primary }}"
-  register: primary
-  when:
-    - mysql_replication_role_replica
-    - (replica.Is_Replica is defined and not replica.Is_Replica) or (replica.Is_Replica is not defined and replica is failed) or (replica.Slave_IO_Running != 'Yes') or (replica.Slave_SQL_Running != 'Yes')
-
-- name: Configure replication on the replica.
+- name: "Mariadb: Configure replication on the replica."
   mysql_replication:
     mode: changeprimary
     primary_host: "{{ mysql_replication_primary }}"
     primary_user: "{{ mysql_replication_user.name }}"
     primary_password: "{{ mysql_replication_user.password }}"
-    primary_log_file: "{{ primary.File }}"
-    primary_log_pos: "{{ primary.Position }}"
+    primary_use_gtid: "{{ mariadb_primary_use_gtid }}"
     login_unix_socket: "{{ mysql_socket }}"
-  ignore_errors: true
-  no_log: true
-  when:
-    - mysql_replication_role_replica
-    - (replica.Is_Replica is defined and not replica.Is_Replica) or (replica.Is_Replica is not defined and replica is failed) or (replica.Slave_IO_Running != 'Yes') or (replica.Slave_SQL_Running != 'Yes')
-
-- name: Start replication.
-  mysql_replication:
-    mode: startreplica
-    login_unix_socket: "{{ mysql_socket }}"
-  when:
-    - mysql_replication_role_replica
-    - (replica.Is_Replica is defined and not replica.Is_Replica) or (replica.Is_Replica is not defined and replica is failed) or (replica.Slave_IO_Running != 'Yes') or (replica.Slave_SQL_Running != 'Yes')
-
-- name: Check replica replication status.
-  mysql_replication:
-    mode: getreplica
-    login_unix_socket: "{{ mysql_socket }}"
-  ignore_errors: true
   register: replica
   when:
-    - mysql_replication_role_replica
+     - ismariadb
+     - ( stopreplica.changed or not isreplica )
 
-- name: Stop replica replication.
-  mysql_replication:
-    mode: stopreplica
-    login_unix_socket: "{{ mysql_socket }}"
-  register: shutdown
-  when:
-    - mysql_replication_role_replica
-    - mysql_replication_gtid
-    - replica.Is_Replica
-    - replica.Slave_IO_Running == 'Yes'
-    - replica.Slave_SQL_Running == 'Yes'
-    - replica.Using_Gtid is defined and replica.Using_Gtid == 'No'
-
-- name: Configure replication on the replica.
+- name: "Mysql: Configure replication on the replica."
   mysql_replication:
     mode: changeprimary
-    primary_use_gtid: "{{ mysql_primary_use_gtid }}"
+    primary_host: "{{ mysql_replication_primary }}"
+    primary_user: "{{ mysql_replication_user.name }}"
+    primary_password: "{{ mysql_replication_user.password }}"
+    primary_auto_position: "{% if infos.settings.gtid_mode == 'ON' %}true{% else %}false{% endif %}"
     login_unix_socket: "{{ mysql_socket }}"
-  ignore_errors: true
+  register: replica
   when:
-    - mysql_replication_role_replica
-    - mysql_replication_gtid
-    - shutdown.changed
+     - ( not ismariadb )
+     - ( stopreplica.changed or not isreplica )
 
 - name: Start replication.
   mysql_replication:
     mode: startreplica
     login_unix_socket: "{{ mysql_socket }}"
   when:
-    - mysql_replication_role_replica
-    - mysql_replication_gtid
-    - shutdown.changed
+    - replica.changed

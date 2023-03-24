@@ -6,6 +6,8 @@ The content evolved from Jeff Geerling original replication tasks and now includ
 
 ## Requirements
 
+collection community.mysql >= 3.1.0 (included in ansible >= 6.x)
+
 An ansible role dedicated to the installation of MySQL/MariaDB such as [tleguern.mysql][tleguern-mysql].
 
 The following set of parameters must be configured on the primary(s):
@@ -21,13 +23,10 @@ expire_logs_days =
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `mysql_replication_gtid` | Whether or not mysql is using gtid for the replication | `true` |
 | `mysql_replication_user` | Defines the replication user | mandatory |
-| `mysql_socket` | MySQL Unix domain socket used for connections | `{{ __mysql_socket }}` |
+| `mysql_socket` | MySQL Unix domain socket used for connections | `/run/mysqld/mysqld.sock` |
 | `mysql_replication_primary` | IP address or FQDN of the primary | mandatory |
-| `mysql_primary_use_gtid` | The value passed to [`primary_use_gtid`] | `slave_pos` |
-| `mysql_replication_role_primary` | Define if the server is the primary | `false` |
-| `mysql_replication_role_replica` | Define if the server is a replica | `false` |
+| `mariadb_primary_use_gtid` | The value passed to [`primary_use_gtid`] (MariaDB only) | `slave_pos` |
 
 ### `mysql_replication_user`
 
