@@ -23,7 +23,7 @@
   ignore_errors: true
 
 - name: Ensure replication user exists on primary.
-  mysql_user:
+  community.mysql.mysql_user:
     name: "{{ mysql_replication_user.name }}"
     host: "{{ mysql_replication_user.host | default('%') }}"
     password: "{{ mysql_replication_user.password }}"
@@ -34,7 +34,7 @@
   delegate_to: "{{ mysql_replication_primary }}"
 
 - name: Get replica replication status.
-  mysql_replication:
+  community.mysql.mysql_replication:
     mode: getreplica
     login_unix_socket: "{{ mysql_socket }}"
   register: replica
@@ -43,7 +43,7 @@
     isreplica: "{{ replica.Is_Replica }}"
 
 - name: Stop replica if replication user or Master_Host changed.
-  mysql_replication:
+  community.mysql.mysql_replication:
     mode: stopreplica
     login_unix_socket: "{{ mysql_socket }}"
   register: stopreplica
@@ -52,7 +52,7 @@
     - primary_login_before.failed or replica.Master_Host != mysql_replication_primary
 
 - name: "Mariadb: Configure replication on the replica."
-  mysql_replication:
+  community.mysql.mysql_replication:
     mode: changeprimary
     primary_host: "{{ mysql_replication_primary }}"
     primary_user: "{{ mysql_replication_user.name }}"
@@ -65,7 +65,7 @@
      - ( stopreplica.changed or not isreplica )
 
 - name: "Mysql: Configure replication on the replica."
-  mysql_replication:
+  community.mysql.mysql_replication:
     mode: changeprimary
     primary_host: "{{ mysql_replication_primary }}"
     primary_user: "{{ mysql_replication_user.name }}"
@@ -78,7 +78,7 @@
      - ( stopreplica.changed or not isreplica )
 
 - name: Start replication.
-  mysql_replication:
+  community.mysql.mysql_replication:
     mode: startreplica
     login_unix_socket: "{{ mysql_socket }}"
   when:
