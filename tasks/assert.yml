@@ -1,11 +1,4 @@
 ---
-- name: test if mysql_replication_gtid is set correctly
-  ansible.builtin.assert:
-    that:
-      - mysql_replication_gtid is defined
-      - mysql_replication_gtid is boolean
-    quiet: yes
-
 - name: test if mysql_socket is set correctly
   ansible.builtin.assert:
     that:
@@ -14,20 +7,6 @@
     quiet: yes
   when:
     - mysql_socket is defined
-
-- name: test if mysql_replication_role_primary is set correctly
-  ansible.builtin.assert:
-    that:
-      - mysql_replication_role_primary is defined
-      - mysql_replication_role_primary is boolean
-    quiet: yes
-
-- name: test if mysql_replication_role_replica is set correctly
-  ansible.builtin.assert:
-    that:
-      - mysql_replication_role_replica is defined
-      - mysql_replication_role_replica is boolean
-    quiet: yes
 
 - name: test if mysql_replication_user.name is set correctly
   ansible.builtin.assert:

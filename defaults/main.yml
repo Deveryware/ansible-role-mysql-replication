@@ -1,7 +1,4 @@
 ---
 # defaults file for ansible-role-mysql-replication-master-slave
-mysql_replication_gtid: true
-mysql_socket: "{{ __mysql_socket }}"
-mysql_replication_role_primary: false
-mysql_replication_role_replica: false
-mysql_primary_use_gtid: 'slave_pos'
+mysql_socket: /run/mysqld/mysqld.sock
+mariadb_primary_use_gtid: 'slave_pos'
