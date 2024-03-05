@@ -34,6 +34,7 @@
   delegate_to: "{{ mysql_replication_primary }}"
 
 - name: Get replica replication status.
+  check_mode: false
   community.mysql.mysql_replication:
     mode: getreplica
     login_unix_socket: "{{ mysql_socket }}"
