@@ -19,6 +19,7 @@
     login_user: "{{ mysql_replication_user.name }}"
     login_password: "{{ mysql_replication_user.password }}"
     login_host: "{{ mysql_replication_primary }}"
+    config_file: ""
   register: primary_login_before
   ignore_errors: true
 
